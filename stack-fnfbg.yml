@@ -1,0 +1,55 @@
+services:
+  # MySQL Database Service
+  mysql-db:
+    container_name: mysql-db
+    command: --default-authentication-plugin=mysql_native_password
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./dbfiles:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=qwerty
+      - MYSQL_DATABASE=sistema_ventas_db
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+    restart: unless-stopped
+
+  # PhpMyAdmin Service
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin:latest
+    restart: always
+    ports:
+      - "9090:80"
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - mysql-db
+
+  # Backend Service
+  sistema-ventas-back:
+    container_name: sistema-ventas-back
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:3000"
+    depends_on:
+      - mysql-db
+
+  # Frontend Service
+  sistema-ventas-front:
+    container_name: sistema-ventas-front
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - sistema-ventas-back
+
+volumes:
+  mysql_data:
+
